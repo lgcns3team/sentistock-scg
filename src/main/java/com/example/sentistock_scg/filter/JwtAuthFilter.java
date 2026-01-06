@@ -24,50 +24,35 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
-    
+        // Preflight는 무조건 통과
         if (exchange.getRequest().getMethod() == HttpMethod.OPTIONS) {
             return chain.filter(exchange);
         }
 
         String path = exchange.getRequest().getURI().getPath();
 
-    
-        String normalized = path;
-        if (normalized.startsWith("/api/api/")) {
-            normalized = normalized.substring("/api".length());
-        }
-        if (normalized.startsWith("/board/board/")) {
-            normalized = normalized.substring("/board".length()); 
-        }
-
-    
-        if (normalized.startsWith("/api/swagger-ui")
-                || normalized.startsWith("/api/v3/api-docs")
-                || normalized.startsWith("/api/webjars")
-                || normalized.equals("/api/swagger-ui.html")
-                || normalized.startsWith("/board/swagger-ui")
-                || normalized.startsWith("/board/v3/api-docs")
-                || normalized.startsWith("/board/webjars")
-                || normalized.equals("/board/swagger-ui.html")) {
+        // ✅ 공개 경로(로그인/회원가입/OAuth/문서/헬스체크)는 토큰 없이 통과
+        if (path.startsWith("/api/auth/")
+                || path.startsWith("/api/auth/oauth/")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/board/v3/api-docs")
+                || path.startsWith("/board/swagger-ui")
+                || path.equals("/actuator/health")
+                || path.equals("/health")) {
             return chain.filter(exchange);
         }
 
-       
-        if (normalized.startsWith("/api/auth/")
-                || normalized.startsWith("/auth/")
-                || normalized.startsWith("/api/oauth2/")
-                || normalized.startsWith("/oauth2/")) {
+        // ✅ 보호할 대상만 검사 (/api/**, /board/**)
+        if (!(path.startsWith("/api/") || path.startsWith("/board/"))) {
             return chain.filter(exchange);
         }
 
-        if (!(normalized.startsWith("/api/") || normalized.startsWith("/board/"))) {
-            return chain.filter(exchange);
-        }
-
-
+        // 헤더 초기화
         ServerHttpRequest.Builder reqBuilder = exchange.getRequest().mutate();
         reqBuilder.headers(h -> h.remove("X-User-Id"));
 
+        // 토큰 검사
         String auth = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         if (auth == null || !auth.startsWith("Bearer ")) {
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
@@ -75,7 +60,6 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
         }
 
         String token = auth.substring(7);
-
         if (!jwtTokenProvider.validate(token)) {
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
@@ -83,7 +67,6 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
 
         String userId = jwtTokenProvider.getUserId(token);
 
-   
         ServerHttpRequest mutated = reqBuilder
                 .header("X-User-Id", userId)
                 .build();
