@@ -1,19 +1,19 @@
 #  Spring Cloud Gateway (SCG)
 
 Spring Cloud Gateway는 SentiStock 서비스에서
-🌐 외부 트래픽이 처음으로 유입되는 단일 진입점(Single Entry Point) 역할을 담당합니다.
+외부 트래픽이 처음으로 유입되는 단일 진입점(Single Entry Point) 역할을 담당합니다.
 모든 클라이언트 요청은 ALB를 거쳐 Gateway로 전달되며,
 이 단계에서 서비스 전반의 보안과 요청 흐름이 통제됩니다.
 
 Gateway는 단순한 라우터가 아니라
-🔐 JWT 기반 인증을 담당하는 보안 경계(Security Boundary) 로 동작합니다.
+🔐JWT 기반 인증을 담당하는 보안 경계(Security Boundary) 로 동작합니다.
 요청에 포함된 토큰을 검증한 뒤,
 인증이 완료된 요청에 한해 👤 사용자 식별 정보를 헤더에 포함시켜
 내부 서비스로 전달합니다.
 인증되지 않은 요청은 Gateway 단계에서 즉시 차단됩니다.
 
 이후 Gateway는 요청 경로에 따라
-🔀 Backend 서비스와 Community 서비스로 요청을 라우팅합니다.
+Backend 서비스와 Community 서비스로 요청을 라우팅합니다.
 외부에서는 하나의 API 엔드포인트만 노출되지만,
 내부적으로는 역할이 분리된 서비스 구조를 유지합니다.
 
@@ -21,7 +21,7 @@ Backend 및 Community 서비스는
 Gateway를 신뢰하는 전제하에 설계되어 있으며,
 Gateway를 통과한 요청은 이미 인증이 완료된 요청으로 간주합니다.
 이를 통해 인증 로직은 Gateway에 집중되고,
-각 서비스는 🎯 비즈니스 도메인 로직에만 집중할 수 있습니다.
+각 서비스는 비즈니스 도메인 로직에만 집중할 수 있습니다.
 
 
 ## 🗂️ Project Structure (SCG)
@@ -71,7 +71,7 @@ jwt
 resources
 - 실행 환경별 설정 분리
 - local / eks 환경에 따른 설정 관리
-- 
+ 
 ---
 
 ## ⚙️ Tech Stack (SCG)
